@@ -33,13 +33,6 @@ void *PrepareForSearch(std::vector<bool> &bits, int w, int h, const char *filena
     return (void *)13182;
 }
 
-void printPath(std::vector<xyLoc> path) {
-    std::for_each(path.begin(), path.end(), [](xyLoc &loc){
-        printf("(%d,%d)", loc.x, loc.y);
-    });
-    printf("\n");
-}
-
 bool GetPath(void *data, xyLoc s, xyLoc g, std::vector<xyLoc> &path)
 {
     assert((long)data == 13182);
@@ -73,7 +66,6 @@ bool GetPath(void *data, xyLoc s, xyLoc g, std::vector<xyLoc> &path)
                 if (path.size() > 0)
                 {
                     path.pop_back();
-                    printPath(path);
                     return false;
                 }
                 return true; // empty path

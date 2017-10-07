@@ -2,6 +2,8 @@
 #include <stdint.h>
 #include <numeric>
 #include <algorithm>
+#include <fstream>
+#include <iostream>
 #include "ScenarioLoader.h"
 #include "Timer.h"
 #include "Entry.h"
@@ -66,6 +68,14 @@ struct stats {
         return true;
     }
 };
+
+string getFileName(char* path) {
+    string s(path);
+    while(s.find("/") != std::string::npos) {
+        s = s.substr(s.find("/") + 1);
+    }
+    return s;
+}
 
 int main(int argc, char **argv)
 {
@@ -169,6 +179,24 @@ int main(int argc, char **argv)
         }
     }
 
+    // logging paths
+    std::ofstream fout;
+    char pathfile[255];
+    string mapfile = getFileName(argv[2]);
+    string scefile = getFileName(argv[3]);
+    sprintf(pathfile, "%s-%s%s-paths.txt", mapfile.c_str(), scefile.c_str(), argv[1]);
+    fout.open(pathfile);
+    if (fout.fail()){
+        std::cout << "Opening the input file failed." << std::endl;
+        exit(1);
+    }
+    for (unsigned int x = 0; x < experimentStats.size(); x++) {
+        std::vector<xyLoc> path = experimentStats[x].path;
+        for (auto it = path.begin(); it != path.end(); it++){
+            fout << "(" << it->x << "," << it->y << ")";
+        }
+        fout << std::endl;
+    }
     return 0;
 }
 

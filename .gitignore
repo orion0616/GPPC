@@ -1,3 +1,4 @@
 resources
 *.o
 a.out
+*paths.txt

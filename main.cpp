@@ -14,6 +14,7 @@ struct stats {
     std::vector<double> times;
     std::vector<xyLoc> path;
     std::vector<int> lengths;
+    int expanded_nodes;
 
     double GetTotalTime()
     {
@@ -154,6 +155,8 @@ int main(int argc, char **argv)
 
             experimentStats[x].times.push_back(t.GetElapsedTime());
             experimentStats[x].lengths.push_back(thePath.size());
+            if(!done)
+                experimentStats[x].expanded_nodes = expanded;
             for (unsigned int t = experimentStats[x].path.size(); t < thePath.size(); t++)
                 experimentStats[x].path.push_back(thePath[t]);
         } while (done == false);
@@ -162,9 +165,9 @@ int main(int argc, char **argv)
 
     for (unsigned int x = 0; x < experimentStats.size(); x++)
     {
-        printf("%s\ttotal-time\t%f\tmax-time-step\t%f\ttime-20-moves\t%f\ttotal-len\t%f\tsubopt\t%f\t", argv[3],
+        printf("%s\ttotal-time\t%f\tmax-time-step\t%f\ttime-20-moves\t%f\ttotal-len\t%f\tsubopt\t%f\texpanded_nodes\t%d\t", argv[3],
                experimentStats[x].GetTotalTime(), experimentStats[x].GetMaxTimestep(), experimentStats[x].Get20MoveTime(),
-               experimentStats[x].GetPathLength(), experimentStats[x].GetPathLength()/scen.GetNthExperiment(x).GetDistance());
+               experimentStats[x].GetPathLength(), experimentStats[x].GetPathLength()/scen.GetNthExperiment(x).GetDistance(), experimentStats[x].expanded_nodes);
         if (experimentStats[x].path.size() == 0 ||
                 (experimentStats[x].ValidatePath(width, height, mapData) &&
                  scen.GetNthExperiment(x).GetStartX() == experimentStats[x].path[0].x &&

@@ -9,6 +9,7 @@ std::vector<bool> map;
 std::vector<int> visited;
 std::vector<xyLoc> succ;
 int width, height;
+int expanded;
 
 void GetSuccessors(xyLoc s, std::vector<xyLoc> &neighbors);
 int GetIndex(xyLoc s);
@@ -35,6 +36,7 @@ void *PrepareForSearch(std::vector<bool> &bits, int w, int h, const char *filena
 
 bool GetPath(void *data, xyLoc s, xyLoc g, std::vector<xyLoc> &path)
 {
+    expanded = 0;
     assert((long)data == 13182);
     std::deque<xyLoc> q;
 
@@ -51,6 +53,7 @@ bool GetPath(void *data, xyLoc s, xyLoc g, std::vector<xyLoc> &path)
     while (q.size() > 0)
     {
         xyLoc next = q.front();
+        expanded++;
 
         q.pop_front();
         GetSuccessors(next, succ);

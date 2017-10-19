@@ -34,7 +34,7 @@ void *PrepareForSearch(std::vector<bool> &bits, int w, int h, const char *filena
     return (void *)13182;
 }
 
-bool GetPath(void *data, xyLoc s, xyLoc g, std::vector<xyLoc> &path)
+bool GetPath(void *data, xyLoc s, xyLoc g, std::vector<xyLoc> &path, std::vector<xyLoc> &expanded_nodes)
 {
     expanded = 0;
     assert((long)data == 13182);
@@ -53,6 +53,7 @@ bool GetPath(void *data, xyLoc s, xyLoc g, std::vector<xyLoc> &path)
     while (q.size() > 0)
     {
         xyLoc next = q.front();
+        expanded_nodes.push_back(next);
         expanded++;
 
         q.pop_front();

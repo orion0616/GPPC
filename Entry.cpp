@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <assert.h>
 #include <iostream>
+#include <cmath>
 #include "Entry.h"
 
 std::vector<bool> map;
@@ -34,7 +35,7 @@ void *PrepareForSearch(std::vector<bool> &bits, int w, int h, const char *filena
     return (void *)13182;
 }
 
-bool GetPath(void *data, xyLoc s, xyLoc g, std::vector<xyLoc> &path)
+bool GetPath(void *data, xyLoc s, xyLoc g, std::vector<xyLoc> &path, std::vector<xyWithFGH> &expanded_nodes)
 {
     expanded = 0;
     assert((long)data == 13182);
@@ -53,6 +54,10 @@ bool GetPath(void *data, xyLoc s, xyLoc g, std::vector<xyLoc> &path)
     while (q.size() > 0)
     {
         xyLoc next = q.front();
+        xyWithFGH next_node;
+        double dist = sqrt((next.x - g.x)*(next.x - g.x)+(next.y-g.y)*(next.y-g.y));
+        next_node.x = next.x, next_node.y = next.y, next_node.f = 0, next_node.g = 0, next_node.h = dist;
+        expanded_nodes.push_back(next_node);
         expanded++;
 
         q.pop_front();

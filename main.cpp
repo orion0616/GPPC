@@ -14,7 +14,7 @@ struct stats {
     std::vector<double> times;
     std::vector<xyLoc> path;
     std::vector<int> lengths;
-    int expanded_nodes;
+    int total_expanded_nodes;
 
     double GetTotalTime()
     {
@@ -82,6 +82,7 @@ int main(int argc, char **argv)
 {
     char filename[255];
     std::vector<xyLoc> thePath;
+    std::vector<xyWithFGH> theExpandeds;
     std::vector<bool> mapData;
     int width, height;
     bool pre = false;
@@ -140,6 +141,7 @@ int main(int argc, char **argv)
     {
         //printf("%d of %d\n", x+1, scen.GetNumExperiments());
         thePath.resize(0);
+        theExpandeds.resize(0);
         experimentStats.resize(x+1);
         bool done;
         do {
@@ -150,13 +152,30 @@ int main(int argc, char **argv)
             g.y = scen.GetNthExperiment(x).GetGoalY();
 
             t.StartTimer();
-            done = GetPath(reference, s, g, thePath);
+            done = GetPath(reference, s, g, thePath, theExpandeds);
             t.EndTimer();
 
             experimentStats[x].times.push_back(t.GetElapsedTime());
             experimentStats[x].lengths.push_back(thePath.size());
-            if(!done)
-                experimentStats[x].expanded_nodes = expanded;
+            if(!done){
+                experimentStats[x].total_expanded_nodes = expanded;
+
+                std::ofstream fout;
+                char pathfile[255];
+                string mapfile = getFileName(argv[2]);
+                string scefile = getFileName(argv[3]);
+                sprintf(pathfile, "expanded/%s-%s%s-%d-expanded.txt",mapfile.c_str(), scefile.c_str(), argv[1], x);
+                fout.open(pathfile);
+                if (fout.fail()){
+                    std::cout << "Opening the input file failed." << std::endl;
+                    exit(1);
+                }
+                for (auto it = theExpandeds.begin(); it != theExpandeds.end(); it++){
+                    fout << "(" << it->x << "," << it->y << "," << it->f << "," << it->g << "," << it->h << ")";
+                }
+                fout << std::endl;
+                fout.close();
+            }
             for (unsigned int t = experimentStats[x].path.size(); t < thePath.size(); t++)
                 experimentStats[x].path.push_back(thePath[t]);
         } while (done == false);
@@ -167,7 +186,7 @@ int main(int argc, char **argv)
     {
         printf("%s\ttotal-time\t%f\tmax-time-step\t%f\ttime-20-moves\t%f\ttotal-len\t%f\tsubopt\t%f\texpanded_nodes\t%d\t", argv[3],
                experimentStats[x].GetTotalTime(), experimentStats[x].GetMaxTimestep(), experimentStats[x].Get20MoveTime(),
-               experimentStats[x].GetPathLength(), experimentStats[x].GetPathLength()/scen.GetNthExperiment(x).GetDistance(), experimentStats[x].expanded_nodes);
+               experimentStats[x].GetPathLength(), experimentStats[x].GetPathLength()/scen.GetNthExperiment(x).GetDistance(), experimentStats[x].total_expanded_nodes);
         if (experimentStats[x].path.size() == 0 ||
                 (experimentStats[x].ValidatePath(width, height, mapData) &&
                  scen.GetNthExperiment(x).GetStartX() == experimentStats[x].path[0].x &&
@@ -200,6 +219,7 @@ int main(int argc, char **argv)
         }
         fout << std::endl;
     }
+    fout.close();
     return 0;
 }
 

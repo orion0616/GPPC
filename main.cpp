@@ -82,7 +82,7 @@ int main(int argc, char **argv)
 {
     char filename[255];
     std::vector<xyLoc> thePath;
-    std::vector<xyLoc> theExpandeds;
+    std::vector<xyWithFGH> theExpandeds;
     std::vector<bool> mapData;
     int width, height;
     bool pre = false;
@@ -164,14 +164,14 @@ int main(int argc, char **argv)
                 char pathfile[255];
                 string mapfile = getFileName(argv[2]);
                 string scefile = getFileName(argv[3]);
-                sprintf(pathfile, "%s-%s%s-%d-expanded.txt", mapfile.c_str(), scefile.c_str(), argv[1], x);
+                sprintf(pathfile, "expanded/%s-%s%s-%d-expanded.txt",mapfile.c_str(), scefile.c_str(), argv[1], x);
                 fout.open(pathfile);
                 if (fout.fail()){
                     std::cout << "Opening the input file failed." << std::endl;
                     exit(1);
                 }
                 for (auto it = theExpandeds.begin(); it != theExpandeds.end(); it++){
-                    fout << "(" << it->x << "," << it->y << ")";
+                    fout << "(" << it->x << "," << it->y << "," << it->f << "," << it->g << "," << it->h << ")";
                 }
                 fout << std::endl;
                 fout.close();

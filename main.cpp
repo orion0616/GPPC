@@ -152,7 +152,8 @@ int main(int argc, char **argv)
             g.y = scen.GetNthExperiment(x).GetGoalY();
 
             t.StartTimer();
-            done = GetPath(reference, s, g, thePath, theExpandeds);
+            // done = GetPath(reference, s, g, thePath, theExpandeds);
+            done = GetPath_ASTAR(reference, s, g, thePath, theExpandeds);
             t.EndTimer();
 
             experimentStats[x].times.push_back(t.GetElapsedTime());
@@ -212,6 +213,7 @@ int main(int argc, char **argv)
         std::cout << "Opening the input file failed." << std::endl;
         exit(1);
     }
+    fout << argv[2] << std::endl;
     for (unsigned int x = 0; x < experimentStats.size(); x++) {
         std::vector<xyLoc> path = experimentStats[x].path;
         for (auto it = path.begin(); it != path.end(); it++){

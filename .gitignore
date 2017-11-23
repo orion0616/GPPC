@@ -2,3 +2,6 @@ resources
 *.o
 a.out
 *paths.txt
+expanded/
+.vscode/
+gppc-simulator/

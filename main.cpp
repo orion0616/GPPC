@@ -158,7 +158,7 @@ int main(int argc, char **argv)
 
             experimentStats[x].times.push_back(t.GetElapsedTime());
             experimentStats[x].lengths.push_back(thePath.size());
-            if(!done){
+            if(!done) {
                 experimentStats[x].total_expanded_nodes = expanded;
 
                 std::ofstream fout;
@@ -167,11 +167,11 @@ int main(int argc, char **argv)
                 string scefile = getFileName(argv[3]);
                 sprintf(pathfile, "expanded/%s-%s%s-%d-expanded.txt",mapfile.c_str(), scefile.c_str(), argv[1], x);
                 fout.open(pathfile);
-                if (fout.fail()){
+                if (fout.fail()) {
                     std::cout << "Opening the input file failed." << std::endl;
                     exit(1);
                 }
-                for (auto it = theExpandeds.begin(); it != theExpandeds.end(); it++){
+                for (auto it = theExpandeds.begin(); it != theExpandeds.end(); it++) {
                     fout << "(" << it->x << "," << it->y << "," << it->f << "," << it->g << "," << it->h << ")";
                 }
                 fout << std::endl;
@@ -209,14 +209,14 @@ int main(int argc, char **argv)
     string scefile = getFileName(argv[3]);
     sprintf(pathfile, "%s-%s%s-paths.txt", mapfile.c_str(), scefile.c_str(), argv[1]);
     fout.open(pathfile);
-    if (fout.fail()){
+    if (fout.fail()) {
         std::cout << "Opening the input file failed." << std::endl;
         exit(1);
     }
     fout << argv[2] << std::endl;
     for (unsigned int x = 0; x < experimentStats.size(); x++) {
         std::vector<xyLoc> path = experimentStats[x].path;
-        for (auto it = path.begin(); it != path.end(); it++){
+        for (auto it = path.begin(); it != path.end(); it++) {
             fout << "(" << it->x << "," << it->y << ")";
         }
         fout << std::endl;

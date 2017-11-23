@@ -3,62 +3,62 @@
 #include <cmath>
 
 struct xyLoc {
-  int16_t x;
-  int16_t y;
-  int hash(){
-    return (x+1)*10000+y;
-  };
+    int16_t x;
+    int16_t y;
+    int hash() {
+        return (x+1)*10000+y;
+    };
 };
 
 struct state {
-  int id;
-  double f_value;
-  double g_value;
-  bool operator>(const state& rhs) const {
-    if(f_value == rhs.f_value)
-      return g_value < rhs.g_value;
-    else
-      return f_value > rhs.f_value;
-  }
-  state(){};
-  state(int id, double f, double g){
-    this->id = id;
-    this->f_value = f;
-    this->g_value = g;
-  }
+    int id;
+    double f_value;
+    double g_value;
+    bool operator>(const state& rhs) const {
+        if(f_value == rhs.f_value)
+            return g_value < rhs.g_value;
+        else
+            return f_value > rhs.f_value;
+    }
+    state() {};
+    state(int id, double f, double g) {
+        this->id = id;
+        this->f_value = f;
+        this->g_value = g;
+    }
 };
 
 struct node: xyLoc {
-  double minimum;
-  node* parent;
-  double g;
-  bool isOpen;
-  node(){};
-  node(xyLoc l){
-    this->x = l.x;
-    this->y = l.y;
-    minimum = 0;
-    isOpen = true;
-  }
-  double octile(xyLoc g){
-    double dx = abs(x-g.x);
-    double dy = abs(y-g.y);
-    return (dx+dy) + (1.4142-2)*fmin(dx,dy);
-  }
+    double minimum;
+    node* parent;
+    double g;
+    bool isOpen;
+    node() {};
+    node(xyLoc l) {
+        this->x = l.x;
+        this->y = l.y;
+        minimum = 0;
+        isOpen = true;
+    }
+    double octile(xyLoc g) {
+        double dx = abs(x-g.x);
+        double dy = abs(y-g.y);
+        return (dx+dy) + (1.4142-2)*fmin(dx,dy);
+    }
 };
 
 struct xyWithFGH: xyLoc {
-  double f;
-  double g;
-  double h;
-  xyWithFGH(node n, xyLoc g){
-    this->x = n.x;
-    this->y = n.y;
-    this->g = n.g;
-    this->h = n.octile(g);
-    this->f = this->g + this->f;
-  }
-  xyWithFGH() {}
+    double f;
+    double g;
+    double h;
+    xyWithFGH(node n, xyLoc g) {
+        this->x = n.x;
+        this->y = n.y;
+        this->g = n.g;
+        this->h = n.octile(g);
+        this->f = this->g + this->f;
+    }
+    xyWithFGH() {}
 };
 
 extern int expanded;

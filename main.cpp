@@ -50,20 +50,26 @@ struct stats {
     {
         for (int x = 0; x < (int)path.size()-1; x++)
         {
-            if (abs(path[x].x - path[x+1].x) > 1)
+            if (abs(path[x].x - path[x+1].x) > 1) {
                 return false;
-            if (abs(path[x].y - path[x+1].y) > 1)
+            }
+            if (abs(path[x].y - path[x+1].y) > 1) {
                 return false;
-            if (!mapData[path[x].y*width+path[x].x])
+            }
+            if (!mapData[path[x].y*width+path[x].x]) {
                 return false;
-            if (!mapData[path[x+1].y*width+path[x+1].x])
+            }
+            if (!mapData[path[x+1].y*width+path[x+1].x]) {
                 return false;
+            }
             if (path[x].x != path[x+1].x && path[x].y != path[x+1].y)
             {
-                if (!mapData[path[x+1].y*width+path[x].x])
+                if (!mapData[path[x+1].y*width+path[x].x]) {
                     return false;
-                if (!mapData[path[x].y*width+path[x+1].x])
+                }
+                if (!mapData[path[x].y*width+path[x+1].x]) {
                     return false;
+                }
             }
         }
         return true;
@@ -88,7 +94,7 @@ int main(int argc, char **argv)
     bool pre = false;
     bool run = false;
 
-    if (argc != 4)
+    if (argc != 5)
     {
         printf("Invalid Arguments\nUsage %s <flag> <map> <scenario>\n", argv[0]);
         printf("Flags:\n");
@@ -152,8 +158,16 @@ int main(int argc, char **argv)
             g.y = scen.GetNthExperiment(x).GetGoalY();
 
             t.StartTimer();
-            // done = GetPath(reference, s, g, thePath, theExpandeds);
-            done = GetPath_ASTAR(reference, s, g, thePath, theExpandeds);
+            if (strcmp(argv[4], "bfs") == 0) {
+                done = GetPath(reference, s, g, thePath, theExpandeds);
+            } else if (strcmp(argv[4], "astar") == 0) {
+                done = GetPath_ASTAR(reference, s, g, thePath, theExpandeds, GetSuccessors_for_astar);
+            } else if (strcmp(argv[4], "jps") == 0) {
+                done = GetPath_ASTAR(reference, s, g, thePath, theExpandeds, GetSuccessors_for_jps);
+            } else {
+                std::cerr << "invalid algorithm is set. exit" << std::endl;
+                std::exit(1);
+            }
             t.EndTimer();
 
             experimentStats[x].times.push_back(t.GetElapsedTime());

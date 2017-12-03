@@ -33,12 +33,15 @@ void *PrepareForSearch(std::vector<bool> &bits, int w, int h, const char *filena
     return (void *)13182;
 }
 
-bool GetPath_ASTAR(void *data, xyLoc s, xyLoc g, std::vector<xyLoc> &path, std::vector<xyWithFGH> &expanded_nodes) {
+std::vector<node*> cache;
+bool GetPath_ASTAR(void *data, xyLoc s, xyLoc g, std::vector<xyLoc> &path,
+                   std::vector<xyWithFGH> &expanded_nodes, std::function<void(node &, std::vector<node> &, xyLoc)> get_successors) {
     expanded = 0;
     assert((long)data == 13182);
     std::priority_queue<state, std::vector<state>, std::greater<state> > q;
     std::unordered_map<int, node> table;
     std::vector<node> successors;
+    cache.resize(0);
     if(path.size() > 0) {
         path.push_back(g);
         return true;
@@ -68,7 +71,7 @@ bool GetPath_ASTAR(void *data, xyLoc s, xyLoc g, std::vector<xyLoc> &path, std::
         expanded_nodes.push_back(n);
         expanded++;
 
-        GetSuccessors_for_astar(table[next.id], successors, g);
+        get_successors(table[next.id], successors, g);
         for(auto it = successors.begin(); it != successors.end(); it++) {
             if(table.find(it->hash()) != table.end()) {
                 if(table[it->hash()].minimum > it->minimum) {
@@ -94,6 +97,11 @@ bool GetPath_ASTAR(void *data, xyLoc s, xyLoc g, std::vector<xyLoc> &path, std::
     }
     path.push_back(s);
     std::reverse(path.begin(), path.end());
+
+    for(auto it = cache.begin(); it != cache.end(); it++) {
+        delete *it;
+    }
+
     if(path.size() > 0) {
         path.pop_back();
         return false;
@@ -156,10 +164,6 @@ int GetIndex(xyLoc s)
     return s.y*width+s.x;
 }
 
-enum Direction {
-    UP, UPPERLEFT, LEFT, LOWERLEFT, DOWN, LOWERRIGHT, RIGHT, UPPERRIGHT
-};
-
 node create_next_node(node &orig, xyLoc goal, Direction d) {
     node next = orig;
     next.parent = &orig;
@@ -201,6 +205,187 @@ node create_next_node(node &orig, xyLoc goal, Direction d) {
     next.isOpen = true;
     next.minimum = next.g + next.octile(goal);
     return next;
+}
+
+Direction calcDirection(node &s) {
+    if(s.parent->x == s.x && s.parent->y == s.y + 1)
+        return UP;
+    else if(s.parent->x == s.x + 1 && s.parent->y == s.y + 1)
+        return UPPERLEFT;
+    else if(s.parent->x == s.x + 1 && s.parent->y == s.y)
+        return LEFT;
+    else if(s.parent->x == s.x + 1 && s.parent->y == s.y - 1)
+        return LOWERLEFT;
+    else if(s.parent->x == s.x && s.parent->y == s.y - 1)
+        return DOWN;
+    else if(s.parent->x == s.x - 1 && s.parent->y == s.y - 1)
+        return LOWERRIGHT;
+    else if(s.parent->x == s.x - 1 && s.parent->y == s.y)
+        return RIGHT;
+    else
+        return UPPERRIGHT;
+}
+
+bool isValidNode(node n) {
+    return 0<= n.x && n.x < width && 0<= n.y && n.y < height && map[GetIndex(n)];
+}
+
+bool isObstacle(node n) {
+    return 0<= n.x && n.x < width && 0<= n.y && n.y < height && !map[GetIndex(n)];
+}
+
+void add_next_if_valid(node& n, xyLoc g, Direction d, std::vector<node>& v) {
+    node next = create_next_node(n, g, d);
+    if(isValidNode(next))
+        v.push_back(next);
+}
+
+std::vector<node> prune(node &current, xyLoc g) {
+    std::vector<node> neighbors;
+    if(current.parent == NULL) {
+        GetSuccessors_for_astar(current, neighbors, g);
+        return neighbors;
+    }
+
+    Direction d = calcDirection(current);
+    node n = node();
+    switch(d) {
+    case UP:
+        add_next_if_valid(current, g, UP, neighbors);
+
+        n = create_next_node(current,g,LOWERLEFT);
+        if(isObstacle(n)) {
+            add_next_if_valid(current, g, UPPERLEFT, neighbors);
+            add_next_if_valid(current, g, LEFT, neighbors);
+        }
+        n = create_next_node(current,g,LOWERRIGHT);
+        if(isObstacle(n)) {
+            add_next_if_valid(current, g, UPPERRIGHT, neighbors);
+            add_next_if_valid(current, g, RIGHT, neighbors);
+        }
+        break;
+    case UPPERLEFT:
+        add_next_if_valid(current, g, UP, neighbors);
+        add_next_if_valid(current, g, LEFT, neighbors);
+        add_next_if_valid(current, g, UPPERLEFT, neighbors);
+        break;
+
+    case LEFT:
+        add_next_if_valid(current, g, LEFT, neighbors);
+
+        n = create_next_node(current,g,UPPERRIGHT);
+        if(isObstacle(n)) {
+            add_next_if_valid(current, g, UPPERLEFT, neighbors);
+            add_next_if_valid(current, g, UP, neighbors);
+        }
+        n = create_next_node(current,g,LOWERRIGHT);
+        if(isObstacle(n)) {
+            add_next_if_valid(current, g, LOWERLEFT, neighbors);
+            add_next_if_valid(current, g, DOWN, neighbors);
+        }
+        break;
+    case LOWERLEFT:
+        add_next_if_valid(current, g, DOWN, neighbors);
+        add_next_if_valid(current, g, LEFT, neighbors);
+        add_next_if_valid(current, g, LOWERLEFT, neighbors);
+        break;
+    case DOWN:
+        add_next_if_valid(current, g, DOWN, neighbors);
+
+        n = create_next_node(current,g,UPPERLEFT);
+        if(isObstacle(n)) {
+            add_next_if_valid(current, g, LOWERLEFT, neighbors);
+            add_next_if_valid(current, g, LEFT, neighbors);
+        }
+        n = create_next_node(current,g,UPPERRIGHT);
+        if(isObstacle(n)) {
+            add_next_if_valid(current, g, LOWERRIGHT, neighbors);
+            add_next_if_valid(current, g, RIGHT, neighbors);
+        }
+        break;
+    case LOWERRIGHT:
+        add_next_if_valid(current, g, DOWN, neighbors);
+        add_next_if_valid(current, g, RIGHT, neighbors);
+        add_next_if_valid(current, g, LOWERRIGHT, neighbors);
+        break;
+    case RIGHT:
+        add_next_if_valid(current, g, RIGHT, neighbors);
+
+        n = create_next_node(current,g,UPPERLEFT);
+        if(isObstacle(n)) {
+            add_next_if_valid(current, g, UPPERRIGHT, neighbors);
+            add_next_if_valid(current, g, UP, neighbors);
+        }
+        n = create_next_node(current,g,LOWERLEFT);
+        if(isObstacle(n)) {
+            add_next_if_valid(current, g, LOWERRIGHT, neighbors);
+            add_next_if_valid(current, g, DOWN, neighbors);
+        }
+        break;
+    case UPPERRIGHT:
+        add_next_if_valid(current, g, UP, neighbors);
+        add_next_if_valid(current, g, RIGHT, neighbors);
+        add_next_if_valid(current, g, UPPERRIGHT, neighbors);
+        break;
+    }
+    return neighbors;
+}
+
+node jump(node &current, Direction d, xyLoc g) {
+    if(d%2 == 1) {
+        Direction d1 = Direction(d-1);
+        Direction d2 = (d+1==8) ? Direction(0) : Direction(d+1);
+        if(!isValidNode(create_next_node(current,g,d1)) || !isValidNode(create_next_node(current,g,d2))) {
+            return node(-1, -1);
+        }
+    }
+    node *n = new node();
+    *n = create_next_node(current, g, d);
+    cache.push_back(n);
+
+    if (!isValidNode(*n)) {
+        return node(-1,-1);
+    }
+    if (n->x == g.x && n->y == g.y) {
+        return *n;
+    }
+    if(are_successors_forced(current, *n, d, g)) {
+        return *n;
+    }
+    if(d%2 == 1) {
+        Direction d1 = Direction(d-1);
+        Direction d2 = (d+1==8) ? Direction(0) : Direction(d+1);
+        if(!jump(*n,d1,g).isNULL()) {
+            return *n;
+        }
+        if(!jump(*n,d2,g).isNULL()) {
+            return *n;
+        }
+    }
+    return jump(*n, d, g);
+}
+
+bool are_successors_forced(node px, node x, Direction d, xyLoc g) {
+    if (d%2 == 1)
+        return false;
+    int neighbor_size = prune(x,g).size();
+    if (neighbor_size > 1 || (neighbor_size == 1 && !isValidNode(create_next_node(x,g,d))))
+        return true;
+    return false;
+}
+
+void GetSuccessors_for_jps(node &s, std::vector<node> &successors, xyLoc g) {
+    successors.resize(0);
+    std::vector<node> neighbors;
+    neighbors = prune(s, g);
+    for(auto it = neighbors.begin(); it != neighbors.end(); it++) {
+        Direction d = calcDirection(*it);
+        node n = jump(s, d, g);
+        if(!n.isNULL()) {
+            successors.push_back(n);
+        }
+    }
+    return;
 }
 
 void GetSuccessors_for_astar(node &s, std::vector<node> &neighbors, xyLoc g) {

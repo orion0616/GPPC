@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <vector>
 #include <cmath>
+#include <functional>
 
 struct xyLoc {
     int16_t x;

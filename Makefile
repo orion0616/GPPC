@@ -1,4 +1,4 @@
-OP="-std=c++11"
+OP= -O3 -std=c++11
 
 all: main.o Entry.o Timer.o ScenarioLoader.o
 	g++ $(OP) main.o Entry.o Timer.o ScenarioLoader.o

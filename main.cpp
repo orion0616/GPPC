@@ -14,7 +14,6 @@ struct stats {
     std::vector<double> times;
     std::vector<xyLoc> path;
     std::vector<int> lengths;
-    int total_expanded_nodes;
 
     double GetTotalTime()
     {
@@ -88,7 +87,6 @@ int main(int argc, char **argv)
 {
     char filename[255];
     std::vector<xyLoc> thePath;
-    std::vector<xyWithFGH> theExpandeds;
     std::vector<bool> mapData;
     int width, height;
     bool pre = false;
@@ -147,7 +145,6 @@ int main(int argc, char **argv)
     {
         //printf("%d of %d\n", x+1, scen.GetNumExperiments());
         thePath.resize(0);
-        theExpandeds.resize(0);
         experimentStats.resize(x+1);
         bool done;
         do {
@@ -158,12 +155,8 @@ int main(int argc, char **argv)
             g.y = scen.GetNthExperiment(x).GetGoalY();
 
             t.StartTimer();
-            if (strcmp(argv[4], "bfs") == 0) {
-                done = GetPath(reference, s, g, thePath, theExpandeds);
-            } else if (strcmp(argv[4], "astar") == 0) {
-                done = GetPath_ASTAR(reference, s, g, thePath, theExpandeds, GetSuccessors_for_astar);
-            } else if (strcmp(argv[4], "jps") == 0) {
-                done = GetPath_ASTAR(reference, s, g, thePath, theExpandeds, GetSuccessors_for_jps);
+            if (strcmp(argv[4], "astar") == 0) {
+                done = GetPath_GASTAR(reference, s, g, thePath);
             } else {
                 std::cerr << "invalid algorithm is set. exit" << std::endl;
                 std::exit(1);
@@ -173,23 +166,17 @@ int main(int argc, char **argv)
             experimentStats[x].times.push_back(t.GetElapsedTime());
             experimentStats[x].lengths.push_back(thePath.size());
             if(!done) {
-                experimentStats[x].total_expanded_nodes = expanded;
 
                 std::ofstream fout;
                 char pathfile[255];
                 string mapfile = getFileName(argv[2]);
                 string scefile = getFileName(argv[3]);
-                sprintf(pathfile, "expanded/%s-%s%s-%d-expanded.txt",mapfile.c_str(), scefile.c_str(), argv[1], x);
                 fout.open(pathfile);
                 if (fout.fail()) {
                     std::cout << "Opening the input file failed." << std::endl;
                     exit(1);
-                }
-                for (auto it = theExpandeds.begin(); it != theExpandeds.end(); it++) {
-                    fout << "(" << it->x << "," << it->y << "," << it->f << "," << it->g << "," << it->h << ")";
-                }
-                fout << std::endl;
                 fout.close();
+                }
             }
             for (unsigned int t = experimentStats[x].path.size(); t < thePath.size(); t++)
                 experimentStats[x].path.push_back(thePath[t]);
@@ -199,9 +186,9 @@ int main(int argc, char **argv)
 
     for (unsigned int x = 0; x < experimentStats.size(); x++)
     {
-        printf("%s\ttotal-time\t%f\tmax-time-step\t%f\ttime-20-moves\t%f\ttotal-len\t%f\tsubopt\t%f\texpanded_nodes\t%d\t", argv[3],
+        printf("%s\ttotal-time\t%f\tmax-time-step\t%f\ttime-20-moves\t%f\ttotal-len\t%f\tsubopt\t%f\t", argv[3],
                experimentStats[x].GetTotalTime(), experimentStats[x].GetMaxTimestep(), experimentStats[x].Get20MoveTime(),
-               experimentStats[x].GetPathLength(), experimentStats[x].GetPathLength()/scen.GetNthExperiment(x).GetDistance(), experimentStats[x].total_expanded_nodes);
+               experimentStats[x].GetPathLength(), experimentStats[x].GetPathLength()/scen.GetNthExperiment(x).GetDistance());
         if (experimentStats[x].path.size() == 0 ||
                 (experimentStats[x].ValidatePath(width, height, mapData) &&
                  scen.GetNthExperiment(x).GetStartX() == experimentStats[x].path[0].x &&
@@ -221,21 +208,6 @@ int main(int argc, char **argv)
     char pathfile[255];
     string mapfile = getFileName(argv[2]);
     string scefile = getFileName(argv[3]);
-    sprintf(pathfile, "%s-%s%s-paths.txt", mapfile.c_str(), scefile.c_str(), argv[1]);
-    fout.open(pathfile);
-    if (fout.fail()) {
-        std::cout << "Opening the input file failed." << std::endl;
-        exit(1);
-    }
-    fout << argv[2] << std::endl;
-    for (unsigned int x = 0; x < experimentStats.size(); x++) {
-        std::vector<xyLoc> path = experimentStats[x].path;
-        for (auto it = path.begin(); it != path.end(); it++) {
-            fout << "(" << it->x << "," << it->y << ")";
-        }
-        fout << std::endl;
-    }
-    fout.close();
     return 0;
 }
 
